@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>ec48fee5-ad2c-40ce-8ed2-8d0f7926cfc4</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AspireOllamaTestNet9.ApiService\AspireOllamaTestNet9.ApiService.csproj" />
+    <ProjectReference Include="..\AspireOllamaTestNet9.Web\AspireOllamaTestNet9.Web.csproj" />
+    <ProjectReference Include="..\AspireOllamaTestNet9.ConsoleApp\AspireOllamaTestNet9.ConsoleApp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.1.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,79 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using AspireOllamaTestNet9.Web.Components.Chatbot
+@using Microsoft.Extensions.AI
+@inject ChatApiClient ChatApi
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<div class="floating-pane">
+    <a href="/" class="hide-chatbot" title="Close Chat"><span>✖</span></a>
+
+    <div class="chatbot-chat" @ref="chat">
+        @if (_chatHistory is not null)
+        {
+            foreach (var message in _chatHistory.Where(m => m.Role == ChatRole.Assistant || m.Role == ChatRole.User))
+            {
+                if (!string.IsNullOrEmpty(message.Contents[0].ToString()))
+                {
+                    <p @key="@message" class="message message-@message.Role">@message.Contents[0].ToString()</p>                    
+                }
+            }
+        }
+
+        @if (thinking)
+        {
+            <p class="thinking">"[Llama]" is Thinking...</p>
+        }
+
+    </div>
+
+    <form class="chatbot-input" @onsubmit="SendMessageAsync">
+        <textarea placeholder="Start chatting..." @ref="@textbox" @bind="messageToSend"></textarea>
+        <button type="submit" title="Send" disabled="@(_chatHistory is null)">Send</button>
+    </form>
+</div>
+
+@code {
+
+    ElementReference textbox;
+    ElementReference chat;
+    string? messageToSend;
+    bool thinking;
+    IJSObjectReference? jsModule;
+
+    private List<ChatMessage> _chatHistory = new List<ChatMessage>();
+
+    private async Task SendMessageAsync()
+    {
+        var messageCopy = messageToSend?.Trim();
+        messageToSend = null;
+
+        if (_chatHistory is not null && !string.IsNullOrEmpty(messageCopy))
+        {
+            var requestMessage = Uri.EscapeDataString(messageCopy);
+             _chatHistory.Add(new ChatMessage(ChatRole.User,requestMessage));
+             ChatMessage chatResponse = new ChatMessage(ChatRole.Assistant, string.Empty);
+             _chatHistory.Add(chatResponse);
+            thinking = true;
+            await foreach (var item in ChatApi.GetChatCompletionStreamingAsync(requestMessage))
+            {
+                // We're streaming the response, so we get each message as it arrives
+                chatResponse.Text += item.Text;
+                await InvokeAsync(StateHasChanged);
+            }
+            thinking = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        jsModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Chatbot/Chatbot.razor.js");
+        await jsModule.InvokeVoidAsync("scrollToEnd", chat);
+
+        if (firstRender)
+        {
+            await textbox.FocusAsync();
+            await jsModule.InvokeVoidAsync("submitOnEnter", textbox);
+        }
+    }
+}
