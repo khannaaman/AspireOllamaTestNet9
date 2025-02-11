@@ -7,6 +7,8 @@ var ollama =
 
 var chat = ollama.AddModel("chat", "llama3.2");
 
+var embeddings = ollama.AddModel("embeddings", "all-minilm");
+
 var apiService = builder.AddProject<Projects.AspireOllamaTestNet9_ApiService>("apiservice")
     .WithReference(chat)
     .WaitFor(chat);
